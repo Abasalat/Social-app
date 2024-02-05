@@ -7,10 +7,13 @@ import Createpost from "./components/Createpost";
 import PostList from "./components/PostList";
 
 function App() {
-  const [selectedTab, setSelectedTab] = useState("Home");
+  const [selectedTab, setSelectedTab] = useState("");
   return (
     <div className="app-content">
-      <SideBar selectedTab={selectedTab}></SideBar>
+      <SideBar
+        selectedTab={selectedTab}
+        setSelectedTab={setSelectedTab}
+      ></SideBar>
       <div className="content">
         <Header></Header>
         {selectedTab === "Home" ? (
