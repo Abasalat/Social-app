@@ -1,9 +1,15 @@
-import { createContext, useReducer } from "react";
+import {
+  createContext,
+  useCallback,
+  useReducer,
+  useState,
+  useEffect,
+} from "react";
 
 export const PostListData = createContext({
   postList: [],
+  fetching: false,
   addPost: () => {},
-  addInitialPost: () => {},
   deletePost: () => {},
 });
 
@@ -20,18 +26,12 @@ const postListReducer = (curPostList, action) => {
 };
 const PostListProvider = ({ children }) => {
   const [postList, dispatch] = useReducer(postListReducer, []);
+  const [fetching, setFetching] = useState(false);
 
-  const addPost = (userId, postTitle, postBody, reactions, tags) => {
+  const addPost = (post) => {
     dispatch({
       type: "Add_Post",
-      payload: {
-        id: Date.now(),
-        title: postTitle,
-        body: postBody,
-        reaction: reactions,
-        userId: userId,
-        tags: tags,
-      },
+      payload: post,
     });
   };
 
@@ -43,21 +43,35 @@ const PostListProvider = ({ children }) => {
       },
     });
   };
-  const deletePost = (id) => {
-    console.log("clicked");
-    let deletePostAction = {
-      type: "Delete_Post",
-      payload: {
-        id,
-      },
+  const deletePost = useCallback(
+    (id) => {
+      dispatch({
+        type: "Delete_Post",
+        payload: {
+          id,
+        },
+      });
+    },
+    [dispatch]
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+    setFetching(true);
+    fetch("https://dummyjson.com/posts", { signal })
+      .then((res) => res.json())
+      .then((data) => {
+        addInitialPost(data.posts);
+        setFetching(false);
+      });
+    return () => {
+      controller.abort();
     };
-    dispatch(deletePostAction);
-  };
+  }, []);
 
   return (
-    <PostListData.Provider
-      value={{ postList, addPost, addInitialPost, deletePost }}
-    >
+    <PostListData.Provider value={{ postList, addPost, fetching, deletePost }}>
       {children}
     </PostListData.Provider>
   );
